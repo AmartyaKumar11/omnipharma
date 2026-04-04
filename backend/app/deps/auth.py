@@ -8,7 +8,8 @@ from sqlalchemy.orm import Session
 
 from app.core.security import decode_token, parse_uuid_sub
 from app.database import get_db
-from app.models.user import User, UserRole
+from app.models.enums import UserRole
+from app.models.user import User
 
 security = HTTPBearer(auto_error=False)
 

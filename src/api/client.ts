@@ -1,6 +1,10 @@
 const base = import.meta.env.VITE_API_URL || "/api";
 
-export type UserRole = "admin" | "manager" | "staff";
+export type UserRole =
+  | "ADMIN"
+  | "BRANCH_MANAGER"
+  | "INVENTORY_CONTROLLER"
+  | "STAFF";
 
 export type UserPublic = {
   id: string;

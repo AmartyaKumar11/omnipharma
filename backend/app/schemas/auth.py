@@ -6,9 +6,10 @@ from pydantic import BaseModel, EmailStr, Field
 
 
 class UserRoleSchema(str, Enum):
-    admin = "admin"
-    manager = "manager"
-    staff = "staff"
+    ADMIN = "ADMIN"
+    BRANCH_MANAGER = "BRANCH_MANAGER"
+    INVENTORY_CONTROLLER = "INVENTORY_CONTROLLER"
+    STAFF = "STAFF"
 
 
 class SignupRequest(BaseModel):

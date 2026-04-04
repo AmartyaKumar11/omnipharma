@@ -8,9 +8,10 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/auth/AuthContext";
 
 const roles: { value: UserRole; label: string }[] = [
-  { value: "staff", label: "Staff" },
-  { value: "manager", label: "Manager" },
-  { value: "admin", label: "Admin" },
+  { value: "STAFF", label: "Staff" },
+  { value: "BRANCH_MANAGER", label: "Branch manager" },
+  { value: "INVENTORY_CONTROLLER", label: "Inventory controller" },
+  { value: "ADMIN", label: "Admin" },
 ];
 
 export function SignupPage() {
@@ -18,7 +19,7 @@ export function SignupPage() {
   const { signup, user, loading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<UserRole>("staff");
+  const [role, setRole] = useState<UserRole>("STAFF");
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [done, setDone] = useState(false);

@@ -1,7 +1,7 @@
 ## Features
 
 * [x] Auth & RBAC
-* [ ] Inventory Management
+* [x] Inventory Management
 * [ ] Sales System
 * [ ] Multi-Store Support
 * [ ] Alerts (AI-lite)

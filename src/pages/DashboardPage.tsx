@@ -76,7 +76,7 @@ export function DashboardPage() {
           <CardTitle>Role check</CardTitle>
           <CardDescription>
             <code className="rounded bg-muted px-1.5 py-0.5 text-xs">GET /auth/admin/ping</code> is
-            restricted to <strong>admin</strong>.
+            restricted to <strong>ADMIN</strong>.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">

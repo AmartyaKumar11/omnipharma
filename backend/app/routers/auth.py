@@ -7,7 +7,8 @@ from sqlalchemy.orm import Session
 from app.core.security import create_access_token, hash_password, verify_password
 from app.database import get_db
 from app.deps.auth import get_current_user, require_role
-from app.models.user import User, UserRole
+from app.models.enums import UserRole
+from app.models.user import User
 from app.schemas.auth import LoginRequest, SignupRequest, TokenResponse, UserPublic
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -22,6 +23,9 @@ def signup(body: SignupRequest, db: Session = Depends(get_db)) -> User:
         email=body.email.lower(),
         password_hash=hash_password(body.password),
         role=UserRole(body.role.value),
+        full_name=None,
+        is_active=True,
+        last_login_at=None,
     )
     db.add(user)
     db.commit()
@@ -50,5 +54,5 @@ def me(current: Annotated[User, Depends(get_current_user)]) -> User:
 
 
 @router.get("/admin/ping")
-def admin_ping(_user: Annotated[User, Depends(require_role(UserRole.admin))]) -> dict[str, str]:
+def admin_ping(_user: Annotated[User, Depends(require_role(UserRole.ADMIN))]) -> dict[str, str]:
     return {"message": "admin OK"}
