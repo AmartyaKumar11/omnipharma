@@ -19,8 +19,8 @@ export default defineConfig({
     open: "http://127.0.0.1:5173/",
     proxy: {
       "/api": {
-        // Avoid Windows ghost listeners on :8000; backend default dev port is 8010
-        target: "http://127.0.0.1:8010",
+        // Use :8020 + uvicorn --app-dir so the API always loads d:\\centific\\backend (not a stale OneDrive copy).
+        target: "http://127.0.0.1:8020",
         changeOrigin: true,
         rewrite: (p) => p.replace(/^\/api/, ""),
       },

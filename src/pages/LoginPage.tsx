@@ -9,7 +9,7 @@ import { useAuth } from "@/auth/AuthContext";
 export function LoginPage() {
   const navigate = useNavigate();
   const { login, loading, user } = useAuth();
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -23,7 +23,7 @@ export function LoginPage() {
     setFormError(null);
     setSubmitting(true);
     try {
-      await login(email, password);
+      await login(username.trim().toLowerCase(), password);
       navigate("/dashboard", { replace: true });
     } catch (err) {
       setFormError(err instanceof Error ? err.message : "Login failed");
@@ -43,19 +43,21 @@ export function LoginPage() {
       <Card>
         <CardHeader>
           <CardTitle>Sign in</CardTitle>
-          <CardDescription>Use your work email and password.</CardDescription>
+          <CardDescription>Use your username and password.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={onSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="username">Username</Label>
               <Input
-                id="email"
-                type="email"
-                autoComplete="email"
+                id="username"
+                type="text"
+                autoComplete="username"
                 required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                minLength={3}
+                maxLength={32}
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
               />
             </div>
             <div className="space-y-2">

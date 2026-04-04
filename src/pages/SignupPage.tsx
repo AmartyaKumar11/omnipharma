@@ -17,7 +17,8 @@ const roles: { value: UserRole; label: string }[] = [
 export function SignupPage() {
   const navigate = useNavigate();
   const { signup, user, loading } = useAuth();
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
+  const [emailOptional, setEmailOptional] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<UserRole>("STAFF");
   const [submitting, setSubmitting] = useState(false);
@@ -33,7 +34,7 @@ export function SignupPage() {
     setFormError(null);
     setSubmitting(true);
     try {
-      await signup(email, password, role);
+      await signup(username.trim().toLowerCase(), password, role, emailOptional.trim() || null);
       setDone(true);
     } catch (err) {
       setFormError(err instanceof Error ? err.message : "Signup failed");
@@ -74,16 +75,34 @@ export function SignupPage() {
           <CardDescription>Choose a role for this environment.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={onSubmit} className="space-y-4">
+          <form onSubmit={onSubmit} className="space-y-4" noValidate>
             <div className="space-y-2">
-              <Label htmlFor="su-email">Email</Label>
+              <Label htmlFor="su-username">Username</Label>
+              <Input
+                id="su-username"
+                type="text"
+                autoComplete="username"
+                required
+                minLength={3}
+                maxLength={32}
+                placeholder="e.g. admin_demo, staff_1"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                3–32 characters: letters, digits, underscore (stored lowercase).
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="su-email">Email (optional)</Label>
               <Input
                 id="su-email"
-                type="email"
-                autoComplete="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="text"
+                inputMode="email"
+                autoComplete="off"
+                placeholder="Leave blank if you only use a username"
+                value={emailOptional}
+                onChange={(e) => setEmailOptional(e.target.value)}
               />
             </div>
             <div className="space-y-2">

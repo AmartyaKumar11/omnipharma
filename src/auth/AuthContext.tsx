@@ -17,8 +17,8 @@ type AuthState = {
   user: UserPublic | null;
   loading: boolean;
   error: string | null;
-  login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string, role: UserRole) => Promise<void>;
+  login: (username: string, password: string) => Promise<void>;
+  signup: (username: string, password: string, role: UserRole, email?: string | null) => Promise<void>;
   logout: () => void;
   clearError: () => void;
 };
@@ -62,17 +62,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [token, logout]);
 
-  const login = useCallback(async (email: string, password: string) => {
+  const login = useCallback(async (username: string, password: string) => {
     setError(null);
     setLoading(true);
-    const { access_token } = await apiLogin({ email, password });
+    const { access_token } = await apiLogin({ username, password });
     localStorage.setItem(STORAGE_KEY, access_token);
     setToken(access_token);
   }, []);
 
-  const signup = useCallback(async (email: string, password: string, role: UserRole) => {
+  const signup = useCallback(async (username: string, password: string, role: UserRole, email?: string | null) => {
     setError(null);
-    await apiSignup({ email, password, role });
+    const trimmed = email?.trim();
+    await apiSignup({
+      username,
+      password,
+      role,
+      ...(trimmed ? { email: trimmed } : {}),
+    });
   }, []);
 
   const clearError = useCallback(() => setError(null), []);

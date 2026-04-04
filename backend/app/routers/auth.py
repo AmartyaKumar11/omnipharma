@@ -17,11 +17,16 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 @router.post("/signup", response_model=UserPublic, status_code=status.HTTP_201_CREATED)
 def signup(body: SignupRequest, db: Session = Depends(get_db)) -> User:
-    existing = db.scalar(select(User).where(User.email == body.email.lower()))
-    if existing:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
+    existing_user = db.scalar(select(User).where(User.username == body.username))
+    if existing_user:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Username already taken")
+    if body.email is not None:
+        existing_email = db.scalar(select(User).where(User.email == body.email.lower()))
+        if existing_email:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
     user = User(
-        email=body.email.lower(),
+        username=body.username,
+        email=body.email.lower() if body.email else None,
         password_hash=hash_password(body.password),
         role=UserRole(body.role.value),
         full_name=None,
@@ -48,7 +53,7 @@ def signup(body: SignupRequest, db: Session = Depends(get_db)) -> User:
 @router.post("/login", response_model=TokenResponse)
 def login(body: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse:
     try:
-        user = db.scalar(select(User).where(User.email == body.email.lower()))
+        user = db.scalar(select(User).where(User.username == body.username))
     except SQLAlchemyError as e:
         db.rollback()
         raise HTTPException(
@@ -58,11 +63,11 @@ def login(body: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse:
     if user is None or not verify_password(body.password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
+            detail="Incorrect username or password",
         )
     token = create_access_token(
         str(user.id),
-        extra={"email": user.email, "role": user.role.value},
+        extra={"username": user.username, "email": user.email, "role": user.role.value},
     )
     return TokenResponse(access_token=token)
 

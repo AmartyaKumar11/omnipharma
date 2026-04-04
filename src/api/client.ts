@@ -8,7 +8,8 @@ export type UserRole =
 
 export type UserPublic = {
   id: string;
-  email: string;
+  username: string;
+  email: string | null;
   role: UserRole;
   created_at: string;
 };
@@ -40,7 +41,12 @@ async function parseJson<T>(res: Response): Promise<T> {
       typeof detail === "string"
         ? detail
         : Array.isArray(detail)
-          ? detail.map((d) => d.msg).join(", ")
+          ? detail
+              .map((d: { loc?: unknown[]; msg?: string }) => {
+                const loc = Array.isArray(d.loc) ? d.loc.filter((x) => x !== "body").join(".") : "";
+                return loc ? `${loc}: ${d.msg ?? ""}` : (d.msg ?? "");
+              })
+              .join("; ")
           : res.statusText;
     throw new Error(message || "Request failed");
   }
@@ -48,26 +54,40 @@ async function parseJson<T>(res: Response): Promise<T> {
 }
 
 export async function signup(body: {
-  email: string;
+  username: string;
   password: string;
   role: UserRole;
+  email?: string | null;
 }): Promise<UserPublic> {
+  // Never omit keys: JSON.stringify drops `undefined`, which makes FastAPI report "Field required"
+  // for username/password/role even when the UI filled them.
+  const payload: Record<string, string> = {
+    username: body.username ?? "",
+    password: body.password ?? "",
+    role: body.role,
+  };
+  const em = body.email?.trim();
+  if (em) payload.email = em;
+
   const res = await fetch(`${base}/auth/signup`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+    body: JSON.stringify(payload),
   });
   return parseJson<UserPublic>(res);
 }
 
 export async function login(body: {
-  email: string;
+  username: string;
   password: string;
 }): Promise<TokenResponse> {
   const res = await fetch(`${base}/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+    body: JSON.stringify({
+      username: body.username ?? "",
+      password: body.password ?? "",
+    }),
   });
   return parseJson<TokenResponse>(res);
 }
