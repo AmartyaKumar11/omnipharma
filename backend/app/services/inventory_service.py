@@ -5,16 +5,24 @@ from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 
 from fastapi import HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import select, asc, desc
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.models.batch import Batch
 from app.models.enums import AlertSeverity, AlertType, InventoryChangeType, InventoryLogSourceType
 from app.models.product import Product
+from app.models.user import User
 from app.models.stock import Inventory, InventoryLog
 from app.models.store import Store
-from app.schemas.inventory import AlertItem, AlertsResponse, BatchPublic, InventoryRowPublic, ProductPublic
+from app.schemas.inventory import (
+    AlertItem,
+    AlertsResponse,
+    BatchPublic,
+    InventoryLogRow,
+    InventoryRowPublic,
+    ProductPublic,
+)
 
 
 def _now() -> datetime:
@@ -237,6 +245,8 @@ def list_inventory_rows(
     *,
     store_id: uuid.UUID | None,
     product_id: uuid.UUID | None,
+    sort_by: str | None = None,
+    sort_dir: str = "asc",
 ) -> list[InventoryRowPublic]:
     q = (
         select(Inventory, Product, Batch)
@@ -248,6 +258,14 @@ def list_inventory_rows(
         q = q.where(Inventory.store_id == store_id)
     if product_id is not None:
         q = q.where(Inventory.product_id == product_id)
+
+    direction = asc if (sort_dir or "asc").lower() == "asc" else desc
+    if sort_by == "expiry_date":
+        q = q.order_by(direction(Batch.expiry_date), Inventory.id.asc())
+    elif sort_by == "quantity":
+        q = q.order_by(direction(Inventory.quantity), Inventory.id.asc())
+    else:
+        q = q.order_by(Batch.expiry_date.asc(), Inventory.id.asc())
 
     rows = db.execute(q).all()
     out: list[InventoryRowPublic] = []
@@ -345,3 +363,98 @@ def compute_alerts(db: Session, *, store_id: uuid.UUID | None, expiry_days: int)
         )
 
     return AlertsResponse(low_stock=low_stock, expiry=expiry_items)
+
+
+def adjust_inventory(
+    db: Session,
+    *,
+    store_id: uuid.UUID,
+    batch_id: uuid.UUID,
+    quantity_delta: int,
+    reason: str | None,
+    performed_by: uuid.UUID,
+) -> Inventory:
+    if quantity_delta == 0:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="quantity_delta cannot be zero",
+        )
+
+    batch = db.get(Batch, batch_id)
+    if batch is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Batch not found")
+
+    store = db.get(Store, store_id)
+    if store is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Store not found")
+
+    stmt = (
+        select(Inventory)
+        .where(Inventory.store_id == store_id, Inventory.batch_id == batch_id)
+        .with_for_update()
+    )
+    inv = db.execute(stmt).scalar_one_or_none()
+    if inv is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No inventory row for this store and batch",
+        )
+
+    ts = _now()
+    if quantity_delta > 0:
+        inv.quantity += quantity_delta
+    else:
+        need = -quantity_delta
+        if inv.quantity < need:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Insufficient stock for this adjustment",
+            )
+        inv.quantity -= need
+    inv.updated_at = ts
+
+    log = InventoryLog(
+        id=uuid.uuid4(),
+        inventory_id=inv.id,
+        change_type=InventoryChangeType.ADJUST,
+        source_type=InventoryLogSourceType.ADJUSTMENT,
+        reference_id=None,
+        quantity_changed=quantity_delta,
+        reason=reason.strip() if reason else None,
+        notes=None,
+        performed_by=performed_by,
+        created_at=ts,
+        updated_at=ts,
+    )
+    db.add(log)
+    db.commit()
+    db.refresh(inv)
+    return inv
+
+
+def list_inventory_audit_logs(db: Session, *, limit: int = 200) -> list[InventoryLogRow]:
+    q = (
+        select(InventoryLog, Product, Batch, User)
+        .join(Inventory, InventoryLog.inventory_id == Inventory.id)
+        .join(Product, Inventory.product_id == Product.id)
+        .join(Batch, Inventory.batch_id == Batch.id)
+        .outerjoin(User, InventoryLog.performed_by == User.id)
+        .order_by(InventoryLog.created_at.desc())
+        .limit(min(limit, 500))
+    )
+    out: list[InventoryLogRow] = []
+    for log, prod, bat, actor in db.execute(q).all():
+        out.append(
+            InventoryLogRow(
+                id=log.id,
+                username=actor.username if actor else None,
+                change_type=log.change_type.value,
+                source_type=log.source_type.value,
+                product_name=prod.name,
+                batch_number=bat.batch_number,
+                quantity_changed=log.quantity_changed,
+                reason=log.reason,
+                created_at=log.created_at,
+            )
+        )
+    return out

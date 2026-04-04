@@ -57,6 +57,13 @@ def require_dashboard_summary(user: Annotated[User, Depends(get_current_user)]) 
     return user
 
 
+def require_admin(user: Annotated[User, Depends(get_current_user)]) -> User:
+    """ADMIN-only: audit logs and sensitive configuration."""
+    if user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions")
+    return user
+
+
 def require_dashboard_analytics(user: Annotated[User, Depends(get_current_user)]) -> User:
     """STAFF is summary-only; trend and store views require elevated roles."""
     if user.role not in (UserRole.ADMIN, UserRole.BRANCH_MANAGER, UserRole.INVENTORY_CONTROLLER):

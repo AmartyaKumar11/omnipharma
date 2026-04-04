@@ -199,3 +199,179 @@ export async function fetchInventoryAlerts(
   });
   return parseJson<AlertsResponse>(res);
 }
+
+// —— Inventory ——
+
+export type ProductPublic = {
+  id: string;
+  name: string;
+  generic_name: string | null;
+  category: string | null;
+  manufacturer: string | null;
+  description: string | null;
+  is_prescription_required: boolean;
+  is_deleted: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type BatchPublic = {
+  id: string;
+  product_id: string;
+  batch_number: string;
+  expiry_date: string;
+  manufacture_date: string | null;
+  purchase_price: string | null;
+  selling_price: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type InventoryRowPublic = {
+  inventory_id: string;
+  store_id: string;
+  product: ProductPublic;
+  batch: BatchPublic;
+  quantity: number;
+  reserved_quantity: number;
+  reorder_threshold: number | null;
+  last_restocked_at: string | null;
+};
+
+export type InventoryLogRow = {
+  id: string;
+  username: string | null;
+  change_type: string;
+  source_type: string;
+  product_name: string;
+  batch_number: string;
+  quantity_changed: number;
+  reason: string | null;
+  created_at: string;
+};
+
+export async function fetchInventoryRows(
+  token: string,
+  params?: {
+    store_id?: string;
+    product_id?: string;
+    sort_by?: "expiry_date" | "quantity";
+    sort_dir?: "asc" | "desc";
+  },
+): Promise<InventoryRowPublic[]> {
+  const res = await fetch(`${base}/inventory${buildQuery(params as Record<string, string | undefined>)}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return parseJson<InventoryRowPublic[]>(res);
+}
+
+export async function postInventoryAdjust(
+  token: string,
+  body: { store_id: string; batch_id: string; quantity_delta: number; reason?: string | null },
+): Promise<{ status: string; inventory_id: string }> {
+  const res = await fetch(`${base}/inventory/adjust`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  return parseJson(res);
+}
+
+export async function fetchInventoryLogs(token: string, limit?: number): Promise<InventoryLogRow[]> {
+  const res = await fetch(
+    `${base}/inventory/logs${buildQuery(limit ? { limit: String(limit) } : {})}`,
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
+  return parseJson<InventoryLogRow[]>(res);
+}
+
+export async function postInventoryStock(
+  token: string,
+  body: { store_id: string; batch_id: string; quantity: number },
+): Promise<{ status: string; inventory_id: string }> {
+  const res = await fetch(`${base}/inventory/stock`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  return parseJson(res);
+}
+
+// —— Orders ——
+
+export type PaymentMethod = "CASH" | "CARD" | "UPI";
+export type OrderType = "OTC" | "PRESCRIPTION";
+
+export type OrderLineIn = { product_id: string; quantity: number };
+
+export type OrderItemOut = {
+  id: string;
+  product_id: string;
+  product_name: string;
+  batch_id: string;
+  batch_number: string;
+  quantity: number;
+  price_at_sale: string;
+  line_total: string;
+};
+
+export type OrderOut = {
+  id: string;
+  order_number: string;
+  store_id: string;
+  user_id: string;
+  order_type: string;
+  status: string;
+  total_amount: string;
+  payment_method: string;
+  notes: string | null;
+  created_at: string;
+  items: OrderItemOut[];
+};
+
+export async function fetchOrders(
+  token: string,
+  params?: { store_id?: string; date_from?: string; date_to?: string },
+): Promise<OrderOut[]> {
+  const res = await fetch(`${base}/orders${buildQuery(params ?? {})}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return parseJson<OrderOut[]>(res);
+}
+
+export async function fetchOrder(token: string, orderId: string): Promise<OrderOut> {
+  const res = await fetch(`${base}/orders/${orderId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return parseJson<OrderOut>(res);
+}
+
+export async function createOrder(
+  token: string,
+  body: {
+    store_id: string;
+    items: OrderLineIn[];
+    payment_method: PaymentMethod;
+    order_type?: OrderType;
+    prescription_file_url?: string | null;
+    doctor_name?: string | null;
+    prescription_notes?: string | null;
+    notes?: string | null;
+  },
+): Promise<OrderOut> {
+  const res = await fetch(`${base}/orders`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      store_id: body.store_id,
+      items: body.items,
+      payment_method: body.payment_method,
+      order_type: body.order_type ?? "OTC",
+      prescription_file_url: body.prescription_file_url,
+      doctor_name: body.doctor_name,
+      prescription_notes: body.prescription_notes,
+      notes: body.notes,
+    }),
+  });
+  return parseJson<OrderOut>(res);
+}

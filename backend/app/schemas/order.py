@@ -23,10 +23,12 @@ class OrderCreate(BaseModel):
     notes: str | None = None
 
     @model_validator(mode="after")
-    def prescription_requires_file(self):
+    def prescription_requires_some_detail(self):
         if self.order_type == OrderType.PRESCRIPTION:
-            if not self.prescription_file_url or not str(self.prescription_file_url).strip():
-                raise ValueError("prescription_file_url is required for PRESCRIPTION orders")
+            has_url = bool(self.prescription_file_url and str(self.prescription_file_url).strip())
+            has_doctor = bool(self.doctor_name and str(self.doctor_name).strip())
+            if not has_url and not has_doctor:
+                raise ValueError("Prescription orders need a file URL and/or doctor name")
         return self
 
 

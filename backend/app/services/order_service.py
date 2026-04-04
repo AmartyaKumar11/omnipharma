@@ -223,12 +223,12 @@ def create_order(
         db.add(log)
 
     if body.order_type is OrderType.PRESCRIPTION:
-        assert body.prescription_file_url
+        file_url = (body.prescription_file_url or "").strip() or "pending://no-file-uploaded"
         rx = Prescription(
             id=uuid.uuid4(),
             order_id=order_id,
             uploaded_by=user_id,
-            file_url=body.prescription_file_url.strip(),
+            file_url=file_url,
             doctor_name=body.doctor_name,
             notes=body.prescription_notes,
             status=PrescriptionStatus.UPLOADED,

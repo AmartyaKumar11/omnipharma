@@ -1,7 +1,11 @@
 import { Navigate, Route, Routes } from "react-router-dom";
+import { AuditLogsPage } from "@/pages/AuditLogsPage";
 import { DashboardPage } from "@/pages/DashboardPage";
 import { HomePage } from "@/pages/HomePage";
+import { InventoryPage } from "@/pages/InventoryPage";
 import { LoginPage } from "@/pages/LoginPage";
+import { OrderHistoryPage } from "@/pages/OrderHistoryPage";
+import { OrdersPage } from "@/pages/OrdersPage";
 import { SignupPage } from "@/pages/SignupPage";
 import { ProtectedRoute } from "@/routes/ProtectedRoute";
 
@@ -16,6 +20,38 @@ export default function App() {
         element={
           <ProtectedRoute>
             <DashboardPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/inventory"
+        element={
+          <ProtectedRoute>
+            <InventoryPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/orders"
+        element={
+          <ProtectedRoute>
+            <OrdersPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/orders/history"
+        element={
+          <ProtectedRoute>
+            <OrderHistoryPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/audit"
+        element={
+          <ProtectedRoute>
+            <AuditLogsPage />
           </ProtectedRoute>
         }
       />

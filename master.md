@@ -6,3 +6,4 @@
 * [ ] Multi-Store Support
 * [ ] Alerts (AI-lite)
 * [x] Dashboard
+* [x] Final Polish

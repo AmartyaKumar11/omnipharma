@@ -9,6 +9,7 @@ import {
   Store,
   TrendingUp,
 } from "lucide-react";
+import { NavLinks } from "@/components/NavLinks";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/auth/AuthContext";
@@ -207,6 +208,9 @@ export function DashboardPage() {
         <div>
           <h1 className="font-display text-3xl font-semibold tracking-tight">Operations dashboard</h1>
           <p className="text-sm text-muted-foreground">Sales, inventory health, and alerts</p>
+          <div className="mt-3">
+            <NavLinks />
+          </div>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" asChild>

@@ -100,3 +100,26 @@ class AlertItem(BaseModel):
 class AlertsResponse(BaseModel):
     low_stock: list[AlertItem]
     expiry: list[AlertItem]
+
+
+class InventoryAdjustRequest(BaseModel):
+    store_id: UUID
+    batch_id: UUID
+    quantity_delta: int = Field(
+        description="Positive adds stock, negative removes (adjustment).",
+    )
+    reason: str | None = Field(default=None, max_length=2000)
+
+
+class InventoryLogRow(BaseModel):
+    id: UUID
+    username: str | None
+    change_type: str
+    source_type: str
+    product_name: str
+    batch_number: str
+    quantity_changed: int
+    reason: str | None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
