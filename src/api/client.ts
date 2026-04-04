@@ -24,7 +24,16 @@ async function parseJson<T>(res: Response): Promise<T> {
     if (!res.ok) throw new Error(res.statusText || "Request failed");
     return {} as T;
   }
-  const data = JSON.parse(text) as T & { detail?: string | { msg: string }[] };
+  let data: T & { detail?: string | { msg: string }[] };
+  try {
+    data = JSON.parse(text) as T & { detail?: string | { msg: string }[] };
+  } catch {
+    if (!res.ok) {
+      const snippet = text.replace(/\s+/g, " ").slice(0, 180);
+      throw new Error(snippet || res.statusText || "Request failed");
+    }
+    throw new Error("Invalid JSON response");
+  }
   if (!res.ok) {
     const detail = (data as { detail?: unknown }).detail;
     const message =

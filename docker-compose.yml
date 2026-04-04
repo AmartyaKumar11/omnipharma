@@ -6,7 +6,8 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: centific
     ports:
-      - "5432:5432"
+      # Avoid conflict with a local Postgres on host :5432; app + Alembic use :5433
+      - "5433:5432"
     volumes:
       - centific_pg:/var/lib/postgresql/data
 
