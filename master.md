@@ -5,4 +5,4 @@
 * [x] Sales System
 * [ ] Multi-Store Support
 * [ ] Alerts (AI-lite)
-* [ ] Dashboard
+* [x] Dashboard

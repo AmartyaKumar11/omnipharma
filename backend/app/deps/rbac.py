@@ -43,3 +43,22 @@ def require_order_reader(user: Annotated[User, Depends(get_current_user)]) -> Us
     ):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions")
     return user
+
+
+def require_dashboard_summary(user: Annotated[User, Depends(get_current_user)]) -> User:
+    """All operational roles may view the summary strip (STAFF included)."""
+    if user.role not in (
+        UserRole.ADMIN,
+        UserRole.BRANCH_MANAGER,
+        UserRole.INVENTORY_CONTROLLER,
+        UserRole.STAFF,
+    ):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions")
+    return user
+
+
+def require_dashboard_analytics(user: Annotated[User, Depends(get_current_user)]) -> User:
+    """STAFF is summary-only; trend and store views require elevated roles."""
+    if user.role not in (UserRole.ADMIN, UserRole.BRANCH_MANAGER, UserRole.INVENTORY_CONTROLLER):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions")
+    return user

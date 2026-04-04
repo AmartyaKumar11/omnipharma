@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import auth, inventory, orders
+from app.routers import auth, dashboard, inventory, orders
 
 app = FastAPI(title="Centific Pharmacy API", version="0.1.0")
 
@@ -19,6 +19,7 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(inventory.router)
 app.include_router(orders.router)
+app.include_router(dashboard.router)
 
 
 @app.get("/health")
