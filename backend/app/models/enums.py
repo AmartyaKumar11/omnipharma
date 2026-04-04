@@ -30,3 +30,25 @@ class AlertSeverity(str, enum.Enum):
     LOW = "LOW"
     MEDIUM = "MEDIUM"
     HIGH = "HIGH"
+
+
+class OrderType(str, enum.Enum):
+    OTC = "OTC"
+    PRESCRIPTION = "PRESCRIPTION"
+
+
+class OrderStatus(str, enum.Enum):
+    COMPLETED = "COMPLETED"
+    CANCELLED = "CANCELLED"
+
+
+class PaymentMethod(str, enum.Enum):
+    CASH = "CASH"
+    CARD = "CARD"
+    UPI = "UPI"
+
+
+class PrescriptionStatus(str, enum.Enum):
+    UPLOADED = "UPLOADED"
+    VERIFIED = "VERIFIED"
+    REJECTED = "REJECTED"

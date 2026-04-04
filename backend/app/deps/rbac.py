@@ -24,3 +24,22 @@ def require_inventory_reader(user: Annotated[User, Depends(get_current_user)]) -
     ):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions")
     return user
+
+
+def require_order_creator(user: Annotated[User, Depends(get_current_user)]) -> User:
+    """STAFF, ADMIN, and INVENTORY_CONTROLLER may create sales orders."""
+    if user.role not in (UserRole.STAFF, UserRole.ADMIN, UserRole.INVENTORY_CONTROLLER):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions")
+    return user
+
+
+def require_order_reader(user: Annotated[User, Depends(get_current_user)]) -> User:
+    """BRANCH_MANAGER is read-only; all roles may list or view orders."""
+    if user.role not in (
+        UserRole.STAFF,
+        UserRole.ADMIN,
+        UserRole.INVENTORY_CONTROLLER,
+        UserRole.BRANCH_MANAGER,
+    ):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Insufficient permissions")
+    return user

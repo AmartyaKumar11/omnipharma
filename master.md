@@ -2,7 +2,7 @@
 
 * [x] Auth & RBAC
 * [x] Inventory Management
-* [ ] Sales System
+* [x] Sales System
 * [ ] Multi-Store Support
 * [ ] Alerts (AI-lite)
 * [ ] Dashboard
