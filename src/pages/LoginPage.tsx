@@ -1,0 +1,91 @@
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useAuth } from "@/auth/AuthContext";
+
+export function LoginPage() {
+  const navigate = useNavigate();
+  const { login, loading, user } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (user && !loading) navigate("/dashboard", { replace: true });
+  }, [user, loading, navigate]);
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setFormError(null);
+    setSubmitting(true);
+    try {
+      await login(email, password);
+      navigate("/dashboard", { replace: true });
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : "Login failed");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="mx-auto flex min-h-[100dvh] max-w-md flex-col justify-center px-4 py-12">
+      <div className="mb-8 text-center">
+        <p className="font-display text-3xl font-semibold tracking-tight text-foreground">
+          Centific
+        </p>
+        <p className="mt-1 text-sm text-muted-foreground">Pharmacy operations</p>
+      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Sign in</CardTitle>
+          <CardDescription>Use your work email and password.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={onSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                autoComplete="current-password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+            {formError ? (
+              <p className="text-sm text-destructive" role="alert">
+                {formError}
+              </p>
+            ) : null}
+            <Button type="submit" className="w-full" disabled={submitting || loading}>
+              {submitting ? "Signing in…" : "Sign in"}
+            </Button>
+          </form>
+          <p className="mt-4 text-center text-sm text-muted-foreground">
+            No account?{" "}
+            <Link to="/signup" className="font-medium text-primary underline-offset-4 hover:underline">
+              Create one
+            </Link>
+          </p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
