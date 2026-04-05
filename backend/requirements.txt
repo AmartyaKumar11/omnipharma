@@ -1,7 +1,7 @@
 fastapi==0.115.12
 uvicorn[standard]==0.34.0
 sqlalchemy==2.0.40
-psycopg[binary]==3.2.6
+psycopg2-binary
 alembic==1.15.2
 passlib[bcrypt]==1.7.4
 bcrypt==4.3.0
