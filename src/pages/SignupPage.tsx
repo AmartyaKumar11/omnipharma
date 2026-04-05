@@ -24,6 +24,18 @@ export function SignupPage() {
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  const [stores, setStores] = useState<{ id: string; name: string }[]>([]);
+  const [storeId, setStoreId] = useState("");
+
+  useEffect(() => {
+    fetch("/api/stores")
+      .then((r) => r.json())
+      .then((data) => {
+        setStores(data);
+        if (data.length > 0) setStoreId(data[0].id);
+      })
+      .catch(console.error);
+  }, []);
 
   useEffect(() => {
     if (user && !loading) navigate("/dashboard", { replace: true });
@@ -34,7 +46,7 @@ export function SignupPage() {
     setFormError(null);
     setSubmitting(true);
     try {
-      await signup(username.trim().toLowerCase(), password, role, emailOptional.trim() || null);
+      await signup(username.trim().toLowerCase(), password, role, emailOptional.trim() || null, role === "ADMIN" ? null : storeId);
       setDone(true);
     } catch (err) {
       setFormError(err instanceof Error ? err.message : "Signup failed");
@@ -132,6 +144,21 @@ export function SignupPage() {
                 ))}
               </select>
             </div>
+            {role !== "ADMIN" && (
+              <div className="space-y-2">
+                <Label htmlFor="su-store">Store</Label>
+                <select
+                  id="su-store"
+                  className="flex h-10 w-full rounded-md border border-border bg-card px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/35"
+                  value={storeId}
+                  onChange={(e) => setStoreId(e.target.value)}
+                  required
+                >
+                  {stores.length === 0 ? <option value="">Loading...</option> : null}
+                  {stores.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+              </div>
+            )}
             {formError ? (
               <p className="text-sm text-destructive" role="alert">
                 {formError}

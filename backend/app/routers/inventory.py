@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.deps.rbac import require_admin, require_inventory_mutator, require_inventory_reader
 from app.models.user import User
+from app.models.enums import UserRole
 from app.schemas.inventory import (
     AlertsResponse,
     BatchCreate,
@@ -66,9 +67,10 @@ def add_stock(
     db: Annotated[Session, Depends(get_db)],
     user: Annotated[User, Depends(require_inventory_mutator)],
 ) -> dict[str, str]:
+    actual_store = user.store_id if user.role != UserRole.ADMIN else body.store_id
     inv = inventory_service.add_or_restock_inventory(
         db,
-        store_id=body.store_id,
+        store_id=actual_store,
         batch_id=body.batch_id,
         quantity=body.quantity,
         performed_by=user.id,
@@ -82,9 +84,10 @@ def reduce_stock(
     db: Annotated[Session, Depends(get_db)],
     user: Annotated[User, Depends(require_inventory_mutator)],
 ) -> dict[str, str]:
+    actual_store = user.store_id if user.role != UserRole.ADMIN else body.store_id
     inv = inventory_service.reduce_inventory_for_sale(
         db,
-        store_id=body.store_id,
+        store_id=actual_store,
         batch_id=body.batch_id,
         quantity=body.quantity,
         performed_by=user.id,
@@ -99,9 +102,10 @@ def adjust_inventory(
     db: Annotated[Session, Depends(get_db)],
     user: Annotated[User, Depends(require_inventory_mutator)],
 ) -> dict[str, str]:
+    actual_store = user.store_id if user.role != UserRole.ADMIN else body.store_id
     inv = inventory_service.adjust_inventory(
         db,
-        store_id=body.store_id,
+        store_id=actual_store,
         batch_id=body.batch_id,
         quantity_delta=body.quantity_delta,
         reason=body.reason,
@@ -128,6 +132,8 @@ def list_inventory(
     sort_by: Annotated[str | None, Query()] = None,
     sort_dir: Annotated[str, Query()] = "asc",
 ) -> list[InventoryRowPublic]:
+    if _user.role != UserRole.ADMIN:
+        store_id = _user.store_id
     return inventory_service.list_inventory_rows(
         db,
         store_id=store_id,
@@ -144,4 +150,6 @@ def inventory_alerts(
     store_id: Annotated[UUID | None, Query()] = None,
     expiry_days: Annotated[int, Query(ge=1, le=365)] = 30,
 ) -> AlertsResponse:
+    if _user.role != UserRole.ADMIN:
+        store_id = _user.store_id
     return inventory_service.compute_alerts(db, store_id=store_id, expiry_days=expiry_days)

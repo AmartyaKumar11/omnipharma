@@ -5,7 +5,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.routers import auth, dashboard, inventory, orders
+from app.routers import auth, dashboard, inventory, orders, stores
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -37,6 +37,7 @@ app.add_middleware(
 )
 
 app.include_router(auth.router)
+app.include_router(stores.router)
 app.include_router(inventory.router)
 app.include_router(orders.router)
 app.include_router(dashboard.router)

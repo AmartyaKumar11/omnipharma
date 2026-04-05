@@ -47,6 +47,11 @@ def get_current_user(
     user = db.get(User, uid)
     if user is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+        
+    user.store_id = payload.get("store_id")
+    if user.role != UserRole.ADMIN and not user.store_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No store mapped to this user session. Access restricted.")
+        
     return user
 
 

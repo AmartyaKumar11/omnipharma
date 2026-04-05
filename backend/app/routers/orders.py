@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.deps.rbac import require_order_creator, require_order_reader
 from app.models.user import User
+from app.models.enums import UserRole
 from app.schemas.order import OrderCreate, OrderOut
 from app.services import order_service
 
@@ -20,6 +21,8 @@ def create_order(
     db: Annotated[Session, Depends(get_db)],
     user: Annotated[User, Depends(require_order_creator)],
 ) -> OrderOut:
+    if user.role != UserRole.ADMIN:
+        body = body.model_copy(update={"store_id": user.store_id})
     return order_service.create_order(db, body=body, user_id=user.id)
 
 
@@ -31,6 +34,8 @@ def list_orders(
     date_from: Annotated[date | None, Query()] = None,
     date_to: Annotated[date | None, Query()] = None,
 ) -> list[OrderOut]:
+    if _user.role != UserRole.ADMIN:
+        store_id = _user.store_id
     return order_service.list_orders(db, store_id=store_id, date_from=date_from, date_to=date_to)
 
 
@@ -43,4 +48,6 @@ def get_order(
     out = order_service.get_order_detail(db, order_id=order_id)
     if out is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found")
+    if _user.role != UserRole.ADMIN and out.store_id != _user.store_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied to this order")
     return out

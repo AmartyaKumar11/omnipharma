@@ -18,7 +18,7 @@ type AuthState = {
   loading: boolean;
   error: string | null;
   login: (username: string, password: string) => Promise<void>;
-  signup: (username: string, password: string, role: UserRole, email?: string | null) => Promise<void>;
+  signup: (username: string, password: string, role: UserRole, email?: string | null, store_id?: string | null) => Promise<void>;
   logout: () => void;
   clearError: () => void;
 };
@@ -70,7 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(access_token);
   }, []);
 
-  const signup = useCallback(async (username: string, password: string, role: UserRole, email?: string | null) => {
+  const signup = useCallback(async (username: string, password: string, role: UserRole, email?: string | null, store_id?: string | null) => {
     setError(null);
     const trimmed = email?.trim();
     await apiSignup({
@@ -78,6 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       password,
       role,
       ...(trimmed ? { email: trimmed } : {}),
+      ...(store_id ? { store_id } : {}),
     });
   }, []);
 

@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { NavLinks } from "@/components/NavLinks";
@@ -12,13 +13,28 @@ export function AppShell({
   description?: string;
   children: React.ReactNode;
 }) {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
+  const [storeName, setStoreName] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (user?.store_id) {
+      fetch("/api/stores").then((r) => r.json()).then(data => {
+        const s = data.find((x: any) => x.id === user.store_id);
+        if (s) setStoreName(s.name);
+      }).catch(console.error);
+    }
+  }, [user]);
 
   return (
     <div className="mx-auto min-h-[100dvh] max-w-6xl px-4 py-8">
       <header className="mb-8 flex flex-col gap-4 border-b border-border pb-6 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="font-display text-2xl font-semibold tracking-tight md:text-3xl">{title}</h1>
+          {user ? (
+            <p className="mb-2 mt-1 text-sm font-medium text-primary">
+              User: <span className="font-bold">{user.username}</span> | Store: <span className="font-bold">{user.role === "ADMIN" ? "Global Access" : (storeName || "Loading...")}</span>
+            </p>
+          ) : null}
           {description ? <p className="mt-1 text-sm text-muted-foreground">{description}</p> : null}
           <div className="mt-4">
             <NavLinks />

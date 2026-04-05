@@ -25,6 +25,7 @@ class SignupRequest(BaseModel):
     password: str = Field(min_length=8, max_length=128)
     role: UserRoleSchema
     email: str | None = Field(default=None, max_length=320)
+    store_id: UUID | None = Field(default=None)
 
     @field_validator("email", mode="before")
     @classmethod
@@ -68,6 +69,7 @@ class UserPublic(BaseModel):
     username: str
     email: str | None
     role: UserRoleSchema
+    store_id: UUID | None = None
     created_at: datetime
 
     model_config = {"from_attributes": True}

@@ -26,13 +26,12 @@ export function InventoryPage() {
   const canAdjust = role === "ADMIN" || role === "INVENTORY_CONTROLLER";
   const canReplenishUi = role === "ADMIN" || role === "BRANCH_MANAGER";
 
-  const [stores, setStores] = useState<{ id: string; name: string }[]>([]);
   const [rows, setRows] = useState<InventoryRowPublic[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
-  const [storeFilter, setStoreFilter] = useState("");
+  const storeFilter = "";
   const [productFilter, setProductFilter] = useState("");
   const [sortBy, setSortBy] = useState<"expiry_date" | "quantity">("expiry_date");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
@@ -51,7 +50,6 @@ export function InventoryPage() {
     setError(null);
     try {
       const st = await fetchDashboardStores(token);
-      setStores(st);
       if (!adjStore && st[0]) setAdjStore(st[0].id);
       const list = await fetchInventoryRows(token, {
         store_id: storeFilter || undefined,
@@ -124,22 +122,6 @@ export function InventoryPage() {
         ) : null}
 
         <div className="mb-6 flex flex-wrap gap-3">
-          <div className="space-y-1">
-            <Label htmlFor="f-store">Store</Label>
-            <select
-              id="f-store"
-              className="flex h-10 min-w-[180px] rounded-md border border-border bg-card px-3 py-2 text-sm"
-              value={storeFilter}
-              onChange={(e) => setStoreFilter(e.target.value)}
-            >
-              <option value="">All stores</option>
-              {stores.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
-          </div>
           <div className="space-y-1">
             <Label htmlFor="f-product">Product</Label>
             <select
@@ -245,22 +227,6 @@ export function InventoryPage() {
             </CardHeader>
             <CardContent>
               <form onSubmit={onAdjust} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <div className="space-y-2">
-                  <Label htmlFor="adj-store">Store</Label>
-                  <select
-                    id="adj-store"
-                    required
-                    className="flex h-10 w-full rounded-md border border-border bg-card px-3 py-2 text-sm"
-                    value={adjStore}
-                    onChange={(e) => setAdjStore(e.target.value)}
-                  >
-                    {stores.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
                 <div className="space-y-2">
                   <Label htmlFor="adj-batch">Batch ID</Label>
                   <Input

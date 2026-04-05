@@ -11,6 +11,7 @@ export type UserPublic = {
   username: string;
   email: string | null;
   role: UserRole;
+  store_id?: string | null;
   created_at: string;
 };
 
@@ -58,6 +59,7 @@ export async function signup(body: {
   password: string;
   role: UserRole;
   email?: string | null;
+  store_id?: string | null;
 }): Promise<UserPublic> {
   // Never omit keys: JSON.stringify drops `undefined`, which makes FastAPI report "Field required"
   // for username/password/role even when the UI filled them.
@@ -68,6 +70,7 @@ export async function signup(body: {
   };
   const em = body.email?.trim();
   if (em) payload.email = em;
+  if (body.store_id) payload.store_id = body.store_id;
 
   const res = await fetch(`${base}/auth/signup`, {
     method: "POST",

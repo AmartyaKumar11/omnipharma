@@ -14,7 +14,6 @@ type Line = { product_id: string; quantity: number };
 
 export function OrdersPage() {
   const { token, user, loading: authLoading } = useAuth();
-  const [stores, setStores] = useState<{ id: string; name: string }[]>([]);
   const [storeId, setStoreId] = useState("");
   const [rows, setRows] = useState<InventoryRowPublic[]>([]);
   const [lines, setLines] = useState<Line[]>([{ product_id: "", quantity: 1 }]);
@@ -36,7 +35,6 @@ export function OrdersPage() {
     setError(null);
     try {
       const st = await fetchDashboardStores(token);
-      setStores(st);
       setStoreId((prev) => prev || st[0]?.id || "");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load stores");
@@ -174,27 +172,6 @@ export function OrdersPage() {
           <CardContent>
             <form onSubmit={onSubmit} className="space-y-6">
               <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="o-store">Store</Label>
-                  <select
-                    id="o-store"
-                    required
-                    className="flex h-10 w-full rounded-md border border-border bg-card px-3 py-2 text-sm"
-                    value={storeId}
-                    onChange={(e) => setStoreId(e.target.value)}
-                    disabled={loadBusy && stores.length === 0}
-                  >
-                    {stores.length === 0 ? (
-                      <option value="">Loading…</option>
-                    ) : (
-                      stores.map((s) => (
-                        <option key={s.id} value={s.id}>
-                          {s.name}
-                        </option>
-                      ))
-                    )}
-                  </select>
-                </div>
                 <div className="space-y-2">
                   <Label htmlFor="o-pay">Payment</Label>
                   <select
