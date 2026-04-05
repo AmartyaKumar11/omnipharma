@@ -10,18 +10,24 @@ from app.models.store import Store
 from app.models.mapping import UserStoreMapping
 from sqlalchemy import select
 
+from datetime import datetime, timezone
+
 def main():
     with SessionLocal() as db:
         # Fetch Medico Hub Central store
         store = db.scalar(select(Store).where(Store.name == "Medico Hub Central"))
         if not store:
-            # Let's try to fetch any store if Medico Hub Central is not found
-            store = db.scalar(select(Store).limit(1))
-            if not store:
-                print("No stores found in the database. Please create one.")
-                return
-            else:
-                print(f"'Medico Hub Central' not found! Falling back to: {store.name}")
+            print("Store 'Medico Hub Central' not found! Creating it...")
+            store = Store(
+                name="Medico Hub Central",
+                location="Main Branch",
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc)
+            )
+            db.add(store)
+            db.commit()
+            db.refresh(store)
+            print(f"Created store: {store.id}")
 
         usernames_to_map = ["amartyabranch", "amartyainventory", "amartyastaff"]
         for un in usernames_to_map:
