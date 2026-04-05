@@ -29,3 +29,4 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+backend/scripts/seed_demo_data.py
