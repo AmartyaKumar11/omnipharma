@@ -7,6 +7,7 @@ import { LoginPage } from "@/pages/LoginPage";
 import { OrderHistoryPage } from "@/pages/OrderHistoryPage";
 import { OrdersPage } from "@/pages/OrdersPage";
 import { SignupPage } from "@/pages/SignupPage";
+import { AIPage } from "@/pages/AIPage";
 import { ProtectedRoute } from "@/routes/ProtectedRoute";
 
 export default function App() {
@@ -52,6 +53,14 @@ export default function App() {
         element={
           <ProtectedRoute>
             <AuditLogsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/ai"
+        element={
+          <ProtectedRoute>
+            <AIPage />
           </ProtectedRoute>
         }
       />

@@ -112,7 +112,7 @@ export function DashboardPage() {
   const [dashLoading, setDashLoading] = useState(true);
   const [dashError, setDashError] = useState<string | null>(null);
 
-  const canAnalytics = user?.role !== "STAFF";
+  const canAnalytics = (user?.role as string)?.toUpperCase() !== "STAFF";
 
   const range30 = useMemo(() => {
     const to = new Date();
@@ -153,14 +153,15 @@ export function DashboardPage() {
       setStores(st);
       const sid = st[0]?.id ?? "";
       setSelectedStoreId(sid);
-      const [perf, tr] = await Promise.all([
-        fetchStorePerformance(token, range30),
-        sid
-          ? fetchSalesTrend(token, { store_id: sid, date_from: range14.date_from, date_to: range14.date_to })
-          : Promise.resolve([]),
-      ]);
-      setStorePerf(perf);
-      setTrend(tr);
+      const perfP = (user?.role as string)?.toUpperCase() === "ADMIN" ? fetchStorePerformance(token, range30) : Promise.resolve([]);
+      const trP = sid
+        ? fetchSalesTrend(token, { store_id: sid, date_from: range14.date_from, date_to: range14.date_to })
+        : Promise.resolve([]);
+
+      const [perfResult, trResult] = await Promise.allSettled([perfP, trP]);
+
+      setStorePerf(perfResult.status === "fulfilled" ? perfResult.value : []);
+      setTrend(trResult.status === "fulfilled" ? trResult.value : []);
     } catch {
       /* optional panels */
     }
@@ -318,43 +319,45 @@ export function DashboardPage() {
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Store className="h-5 w-5" aria-hidden />
-                    Store performance
-                  </CardTitle>
-                  <CardDescription>Sales by store (last 30 days)</CardDescription>
-                </CardHeader>
-                <CardContent className="overflow-x-auto">
-                  <table className="w-full min-w-[480px] text-left text-sm">
-                    <thead>
-                      <tr className="border-b border-border text-muted-foreground">
-                        <th className="py-2 pr-4 font-medium">Store</th>
-                        <th className="py-2 pr-4 font-medium">Orders</th>
-                        <th className="py-2 font-medium">Sales</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {storePerf.length === 0 ? (
-                        <tr>
-                          <td colSpan={3} className="py-6 text-muted-foreground">
-                            No orders in range, or stores not set up yet.
-                          </td>
+              {(user.role as string).toUpperCase() === "ADMIN" && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Store className="h-5 w-5" aria-hidden />
+                      Store performance
+                    </CardTitle>
+                    <CardDescription>Sales by store (last 30 days)</CardDescription>
+                  </CardHeader>
+                  <CardContent className="overflow-x-auto">
+                    <table className="w-full min-w-[480px] text-left text-sm">
+                      <thead>
+                        <tr className="border-b border-border text-muted-foreground">
+                          <th className="py-2 pr-4 font-medium">Store</th>
+                          <th className="py-2 pr-4 font-medium">Orders</th>
+                          <th className="py-2 font-medium">Sales</th>
                         </tr>
-                      ) : (
-                        storePerf.map((row) => (
-                          <tr key={row.store_id} className="border-b border-border/60">
-                            <td className="py-3 pr-4 font-medium">{row.store_name}</td>
-                            <td className="py-3 pr-4 tabular-nums">{row.order_count}</td>
-                            <td className="py-3 tabular-nums">{formatMoney(row.total_sales)}</td>
+                      </thead>
+                      <tbody>
+                        {storePerf.length === 0 ? (
+                          <tr>
+                            <td colSpan={3} className="py-6 text-muted-foreground">
+                              No orders in range, or stores not set up yet.
+                            </td>
                           </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </CardContent>
-              </Card>
+                        ) : (
+                          storePerf.map((row) => (
+                            <tr key={row.store_id} className="border-b border-border/60">
+                              <td className="py-3 pr-4 font-medium">{row.store_name}</td>
+                              <td className="py-3 pr-4 tabular-nums">{row.order_count}</td>
+                              <td className="py-3 tabular-nums">{formatMoney(row.total_sales)}</td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           ) : (
             <p className="mb-8 text-sm text-muted-foreground">

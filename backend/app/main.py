@@ -5,7 +5,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.routers import auth, dashboard, inventory, orders, stores
+from app.routers import auth, dashboard, inventory, orders, stores, ai
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -41,6 +41,7 @@ app.include_router(stores.router)
 app.include_router(inventory.router)
 app.include_router(orders.router)
 app.include_router(dashboard.router)
+app.include_router(ai.router)
 
 
 @app.get("/health")

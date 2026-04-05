@@ -18,6 +18,9 @@ export function NavLinks() {
       <Link className={linkClass} to="/dashboard">
         Dashboard
       </Link>
+      <Link className={linkClass} to="/ai">
+        AI Hub
+      </Link>
       <Link className={linkClass} to="/inventory">
         Inventory
       </Link>
