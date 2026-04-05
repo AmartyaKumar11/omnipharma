@@ -30,3 +30,4 @@ dist-ssr
 *.sln
 *.sw?
 backend/scripts/seed_demo_data.py
+backend/seed_err.txt
